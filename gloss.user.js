@@ -1101,6 +1101,12 @@
             if (!config.key) { reject(new Error('请先配置 API Key')); return; }
 
             const isChinese = lang === 'zh';
+            
+            // 获取已掌握词汇，让 AI 排除
+            const masteredWords = getMasteredWords();
+            const masteredHint = masteredWords.length > 0 
+                ? `\n\nIMPORTANT: The user has already mastered these words, DO NOT include them:\n${masteredWords.slice(0, 100).join(', ')}`
+                : '';
 
             const prompt = isChinese
                 ? `You are a language learning assistant helping Chinese users learn English. Analyze the following Chinese text and identify ${config.wordCount} Chinese words or phrases that would be useful for learning their English equivalents.
@@ -1126,7 +1132,7 @@ Output format:
 Text to analyze:
 """
 ${text}
-"""`
+"""${masteredHint}`
                 : `You are a language learning assistant. Analyze the following English text and identify ${config.wordCount} difficult or important vocabulary words that a Chinese learner might not know.
 
 Requirements:
@@ -1144,7 +1150,7 @@ Output format:
 Text to analyze:
 """
 ${text}
-"""`;
+"""${masteredHint}`;
 
             const requestData = JSON.stringify({
                 model: config.model,
